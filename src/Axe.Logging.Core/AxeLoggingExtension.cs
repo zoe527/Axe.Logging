@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Axe.Logging.Core.Entity;
 
 namespace Axe.Logging.Core
@@ -21,45 +22,11 @@ namespace Axe.Logging.Core
             {
                 var aggregateExceptionInnerExceptions = aggregateException.InnerExceptions;
 
-                foreach (var aggregateExceptionInnerException in aggregateExceptionInnerExceptions)
-                {
-                        if (aggregateExceptionInnerException != null)
-                        {
-                            var exceptionInnerException = aggregateExceptionInnerException;
-                            for (var i = 0; i < maxLevel; i++)
-                            {
-                                if (exceptionInnerException != null)
-                                {
-                                    var myException = exceptionInnerException.InnerException;
-                                    if (myException != null && myException.Data[LoggingLevel.IKnowItWillHappen.ToString()] != null)
-                                    {
-                                        logEntryList.Add((LogEntry)myException.Data[LoggingLevel.IKnowItWillHappen.ToString()]);
-                                    }
-
-                                    if (myException != null && myException.Data[LoggingLevel.UnKnown.ToString()] != null)
-                                    {
-                                        logEntryList.Add((LogEntry)myException.Data[LoggingLevel.UnKnown.ToString()]);
-                                    }
-                                    exceptionInnerException = myException;
-                                }
-                            }
-                    }
-                }
+                logEntryList = aggregateExceptionInnerExceptions.Where(aggregateExceptionInnerException => aggregateExceptionInnerException != null).Aggregate(logEntryList, (current, aggregateExceptionInnerException) => current.ErgodicLogEntryList(maxLevel, aggregateExceptionInnerException));
             }
             else
             {
-                for (var i = 0; i < maxLevel; i++)
-                {
-                    if (exception != null)
-                    {
-                        var myException = exception.InnerException;
-                        if (myException != null && myException.Data[LoggingLevel.IKnowItWillHappen.ToString()] != null)
-                        {
-                            logEntryList.Add((LogEntry)myException.Data[LoggingLevel.IKnowItWillHappen.ToString()]);
-                        }
-                        exception = myException;
-                    }
-                }
+                logEntryList = logEntryList.ErgodicLogEntryList(maxLevel, exception);
             }
 
             return logEntryList.ToArray();
